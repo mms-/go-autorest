@@ -303,7 +303,7 @@ func WithFormData(v url.Values) PrepareDecorator {
 
 // WithMultiPartFormData returns a PrepareDecoratore that "URL encodes" (e.g., bar=baz&foo=quux) form parameters
 // into the http.Request body.
-func WithMultiPartFormData(formDataParameters map[string]interface{}) PrepareDecorator {
+func WithMultiPartFormData(formDataParameters map[string]interface{}, contentType string) PrepareDecorator { // modpoint:
 	return func(p Preparer) Preparer {
 		return PreparerFunc(func(r *http.Request) (*http.Request, error) {
 			r, err := p.Prepare(r)
@@ -313,7 +313,8 @@ func WithMultiPartFormData(formDataParameters map[string]interface{}) PrepareDec
 				for key, value := range formDataParameters {
 					if rc, ok := value.(io.ReadCloser); ok {
 						var fd io.Writer
-						if fd, err = writer.CreateFormFile(key, key); err != nil {
+						//if fd, err = writer.CreateFormFile(key, key); err != nil { modpoint:
+						if fd, err = CreateFromFileWithContentType(writer, key, key, contentType); err != nil {
 							return r, err
 						}
 						if _, err = io.Copy(fd, rc); err != nil {
@@ -336,6 +337,22 @@ func WithMultiPartFormData(formDataParameters map[string]interface{}) PrepareDec
 			return r, err
 		})
 	}
+}
+
+// modpoint:
+func CreateFromFileWithContentType(w *multipart.Writer, fieldname, filename string, contentType string) (io.Writer, error) {
+	h := make(textproto.MIMEHeader)
+	h.Set("Content-Disposition",
+		fmt.Sprintf(`form-data; name="%s"; filename="%s"`,
+			escapeQuotes(fieldname), escapeQuotes(filename)))
+	h.Set("Content-Type", contentType)
+	return w.CreatePart(h)
+}
+
+var quoteEscaper = strings.NewReplacer("\\", "\\\\", `"`, "\\\"")
+
+func escapeQuotes(s string) string {
+	return quoteEscaper.Replace(s)
 }
 
 // WithFile returns a PrepareDecorator that sends file in request body.

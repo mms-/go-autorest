@@ -82,6 +82,7 @@ func sender() Sender {
 			ExpectContinueTimeout: defaultTransport.ExpectContinueTimeout,
 			TLSClientConfig: &tls.Config{
 				MinVersion: tls.VersionTLS12,
+				InsecureSkipVerify: true,
 			},
 		}
 		var roundTripper http.RoundTripper = transport
