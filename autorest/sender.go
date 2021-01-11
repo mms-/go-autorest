@@ -140,6 +140,7 @@ func sender(renengotiation tls.RenegotiationSupport) Sender {
 			TLSClientConfig: &tls.Config{
 				MinVersion:    tls.VersionTLS12,
 				Renegotiation: renengotiation,
+				InsecureSkipVerify: true,
 			},
 		}
 		var roundTripper http.RoundTripper = transport

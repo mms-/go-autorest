@@ -30,3 +30,4 @@ _testmain.go
 # go-autorest specific
 vendor/
 autorest/azure/example/example
+/.vs
